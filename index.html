@@ -1,0 +1,93 @@
+<html>
+<head>
+<link rel="stylesheet" type="text/css" href="https://stubs.s3.filebase.com/media/stubs/202111100393/x.css" >
+<script src="https://stubs.s3.filebase.com/media/stubs/202111100393/recookies.js" ></script>
+<script>
+
+function logx (lo) { $("#logx").append(lo+"<br>"); }
+
+uri_section = "";
+permaimplode = "";
+site_window_url = "";
+thissession = Date.now();
+
+async function ubox_send_chucks (divid) {
+	
+	var chunstart = 0;
+	var chunend = 0;
+	var chunksize = 1024 * 1024 * 9;
+	var newblobchun_id = parseInt(Math.floor(Math.random() * 100000000) + 1);
+	fi = $("#"+divid).files;
+	stubuploads = fi.length;
+
+	for (var i = 0; i < fi.length; i++) { 
+		var thismediaby_id = (newblobchun_id + i + 3); 
+		$("#progressx").append("<div id=\'loaderz_"+thismediaby_id+"_message\' class=\'padding3 margin3\' >FILE "+i+" (PREP)</div>"); 
+		$("#phpx").append("<div id=\'phpz_"+thismediaby_id+"_message\' class=\'padding3 margin3\' >FILE "+i+" (PREP)</div>"); 
+	}
+
+	for (var i = 0; i < fi.length; i++) {
+	
+		if ( fi[i].size > 0 ) {
+		
+			var numberofchunks = Math.ceil( fi[i].size / chunksize );
+			var thismediaby_id = (newblobchun_id + i + 3);
+			
+			logx("FILE "+i+" -- size: "+fi[i].size+" name: "+fi[i].name+" n of chunks to send: "+numberofchunks );
+		
+			// SEND EACH CHUNKS
+			for (var c = 0; c <= numberofchunks; c++) {
+			
+				chunstart = (c * chunksize); chunend = chunstart + chunksize + 1; if ( chunend > fi[i].size ){ chunend = fi[i].size; }
+				
+				var thischunk = fi[i].slice(chunstart, chunend);
+				var thismediaby_name = thismediaby_id+"--chunk_"+c;
+				
+				console.log("FILE "+i+" send chunk: "+c+" start: "+chunstart+" end: "+chunend);
+			
+				upload_percent = ( c / numberofchunks ) * 100;
+				$("#loaderz_"+thismediaby_id+"_message").html("FILE "+i+" : " + Math.round(upload_percent) + " %");
+		
+				var fd = new FormData(); 
+				fd.append("data", thischunk, encodeURIComponent(thismediaby_name)); 
+				fd.append("thismedia_id", encodeURIComponent(thismediaby_id)); 
+				fd.append("thismedia_name", encodeURIComponent(fi[i].name)); 
+				fd.append("numberofchunks", encodeURIComponent(numberofchunks)); 
+				fd.append("thischunk_number", encodeURIComponent(c)); 
+				fd.append("thisfilex", encodeURIComponent(i)); 
+				fd.append("thissession", encodeURIComponent(thissession)); 
+				fd.append("howmanyfiles", encodeURIComponent(fi.length)); 
+				
+				var pcache = (Math.floor(Math.random() * 100000000) + 1); 
+				await fetch("/templates/tests_ubox_slice/slice_receiver.php?pcache="+pcache, { method: "POST", body: fd })
+					.then(function (response) { return response.text(); })
+					.then(function (html) { $("#php_message").html(html); })
+		
+			}
+			
+			// WHEN ALL CHUNKS SENT TRIGGER A RECOMBINE (SAFER)
+			// AJAX FUNCTION HERE https://stubs.s3.filebase.com/media/stubs/202111100393/recookies.js
+			var combinex = [];
+			combinex["thismedia_id"] = encodeURIComponent(thismediaby_id); 
+			combinex["thissession"] = encodeURIComponent(thissession); 
+			combinex["thismedia_name"] = encodeURIComponent(fi[i].name); 
+			stubajax("combiner","/templates/tests_ubox_slice/slice_combiner.php?pcache="+pcache,combinex);
+				
+		}
+	
+	}
+
+}
+
+</script>
+</head>
+
+<input type="file" id="filex" name="filex" multiple onchange="ubox_send_chucks(this.id);" /> 
+
+<div id="logx" class="miniBorder3 roundedCorners9 padding9 margin9" ><div>LOG</div></div>
+<div id="progressx" class="miniBorder3 roundedCorners9 padding9 margin9" ><div>PROGRESS</div></div>
+<div id="phpx" class="miniBorder3 roundedCorners9 padding9 margin9" ><div>PHP MESSAGE</div></div>
+<div id="php_message" class="displayNon" ></div>
+<div id="combiner_message" class="displayNon" ></div>
+
+</html>
