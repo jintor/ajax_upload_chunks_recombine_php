@@ -1,7 +1,9 @@
 <?php
 
 if ( isset($_REQUEST) ) {
-
+	
+	include_once('clean.php');
+	
 	$pcache = clean( $_REQUEST['pcache'] ?? '' ) ;
 	$thismedia_id = clean( $_REQUEST['thismedia_id'] ?? '' ) ;
 	$thismedia_name = accentx(clean( $_REQUEST['thismedia_name'] ?? '' ),'unlock');
